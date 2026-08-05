@@ -1,197 +1,105 @@
+import time
+
 import pandas as pd
-import re
-import unicodedata
+
+from mapper import ProductMapper
 
 
 INPUT_FILE = "unmatched_offers.csv"
-OUTPUT_FILE = "titles_rest.csv"
+
+OUTPUT_TITLES = "titles_rest.csv"
+OUTPUT_MAPPING = "offer_mapping.csv"
+OUTPUT_REVIEW = "offers_to_review.csv"
 
 
-def normalize(text):
-    if pd.isna(text):
-        return ""
+def main():
+    start_time = time.time()
 
-    text = str(text).lower().strip()
+    print("Wczytywanie pliku...")
 
-    text = unicodedata.normalize("NFKD", text)
-    text = "".join(
-        c for c in text
-        if not unicodedata.combining(c)
+    df = pd.read_csv(
+        INPUT_FILE,
+        sep=";",
+        dtype=str,
+        keep_default_na=False
     )
 
-    text = re.sub(r"\s+", " ", text)
-
-    return text
-
-
-def slugify(text):
-    text = normalize(text)
-
-    text = re.sub(
-        r"[^a-z0-9]+",
-        "-",
-        text
+    print(
+        f"Wczytano {len(df)} ofert."
     )
 
-    return text.strip("-")
+    mapper = ProductMapper()
 
+    df = mapper.process(df)
 
-def detect_category(row):
-    name = normalize(row["clean_name"])
-    feed_category = normalize(row["feed_category"])
+    review = df[
+        df["detected_category"] == "OTHER"
+    ].copy()
 
+    titles, offer_mapping = mapper.build_titles(df)
 
-    if "ingame_currency" in feed_category:
-        return "IN_GAME_CURRENCY"
+    print("Zapisywanie wyników...")
 
-    if "ingame_item" in feed_category:
-        return "IN_GAME_ITEM"
+    titles.to_csv(
+        OUTPUT_TITLES,
+        sep=";",
+        index=False,
+        encoding="utf-8-sig"
+    )
 
-    if "software" in feed_category:
-        return "SOFTWARE"
+    offer_mapping.to_csv(
+        OUTPUT_MAPPING,
+        sep=";",
+        index=False,
+        encoding="utf-8-sig"
+    )
 
-    if "gift" in feed_category:
-        return "GIFT_CARD"
+    review.to_csv(
+        OUTPUT_REVIEW,
+        sep=";",
+        index=False,
+        encoding="utf-8-sig"
+    )
 
-    if "prepaid" in feed_category:
-        return "GIFT_CARD"
+    elapsed = time.time() - start_time
 
-    if "topup" in feed_category:
-        return "TOP_UP"
+    print()
+    print("===== WYNIKI =====")
 
+    print(
+        "Wszystkie oferty:",
+        len(df)
+    )
 
-    if any(x in name for x in [
-        "gift card",
-        "giftcard",
-        "wallet card",
-        "voucher"
-    ]):
-        return "GIFT_CARD"
+    print(
+        "Rozpoznane:",
+        len(df) - len(review)
+    )
 
-    if any(x in name for x in [
-        "v-bucks",
-        "v bucks",
-        "robux",
-        "fc points",
-        "riot points"
-    ]):
-        return "IN_GAME_CURRENCY"
+    print(
+        "Do ręcznej analizy:",
+        len(review)
+    )
 
-    if any(x in name for x in [
-        "game pass",
-        "ps plus",
-        "playstation plus",
-        "subscription"
-    ]):
-        return "SUBSCRIPTION"
+    print(
+        "Utworzone produkty:",
+        len(titles)
+    )
 
-    if any(x in name for x in [
-        "windows",
-        "office",
-        "antivirus",
-        "internet security",
-        "vpn"
-    ]):
-        return "SOFTWARE"
+    print()
+    print("Kategorie:")
 
-    return "OTHER"
+    print(
+        df["detected_category"]
+        .value_counts()
+    )
 
-
-def create_skeleton_key(row):
-    """
-    Na razie prosta wersja.
-    """
-
-    name = normalize(row["clean_name"])
-
-    remove_words = [
-        "global",
-        "key",
-        "cd key"
-    ]
-
-    for word in remove_words:
-        name = name.replace(word, "")
-
-    name = re.sub(r"\s+", " ", name).strip()
-
-    category = detect_category(row)
-
-    return slugify(
-        f"{category}-{name}"
+    print()
+    print(
+        f"Czas wykonania: "
+        f"{elapsed:.2f} s"
     )
 
 
-df = pd.read_csv(
-    INPUT_FILE,
-    sep=";",
-    dtype=str,
-    keep_default_na=False
-)
-
-
-print("Liczba ofert:", len(df))
-
-
-df["detected_category"] = df.apply(
-    detect_category,
-    axis=1
-)
-
-df["skeleton_key_new"] = df.apply(
-    create_skeleton_key,
-    axis=1
-)
-
-
-# group
-
-grouped = (
-    df[df["detected_category"] != "OTHER"]
-    .groupby("skeleton_key_new", as_index=False)
-    .first()
-)
-
-
-titles_rest = pd.DataFrame({
-    "id": range(1, len(grouped) + 1),
-
-    "name":
-        grouped["clean_name"],
-
-    "slug":
-        grouped["clean_name"].apply(slugify),
-
-    "skeleton_key":
-        grouped["skeleton_key_new"],
-
-    "image_url":
-        grouped["image_url"],
-
-    "category":
-        grouped["detected_category"],
-
-    "edition":
-        grouped["edition"],
-
-    "system_id":
-        grouped["drm"]
-})
-
-
-titles_rest.to_csv(
-    OUTPUT_FILE,
-    sep=";",
-    index=False
-)
-
-
-print(
-    "Utworzono produktów:",
-    len(titles_rest)
-)
-
-print(
-    "Zapisano:",
-    OUTPUT_FILE
-)
+if __name__ == "__main__":
+    main()
