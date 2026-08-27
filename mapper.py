@@ -9,11 +9,18 @@ from normalizer import TextNormalizer
 class ProductMapper:
 
     def __init__(self):
-        self.classifier = ProductClassifier()
-        self.key_builder = SkeletonKeyBuilder()
+        self.classifier = (
+            ProductClassifier()
+        )
+
+        self.key_builder = (
+            SkeletonKeyBuilder()
+        )
 
     def process(self, df):
-        print("Klasyfikacja produktów...")
+        print(
+            "Klasyfikacja produktów..."
+        )
 
         classification = df.apply(
             self.classifier.classify,
@@ -35,21 +42,27 @@ class ProductMapper:
             for result in classification
         ]
 
-        print("Wykrywanie regionów...")
+        print(
+            "Wykrywanie regionów..."
+        )
 
         df["detected_region"] = df.apply(
             ProductExtractor.detect_region,
             axis=1
         )
 
-        print("Wykrywanie platform...")
+        print(
+            "Wykrywanie platform..."
+        )
 
         df["detected_platform"] = df.apply(
             ProductExtractor.detect_platform,
             axis=1
         )
 
-        print("Budowanie skeleton_key...")
+        print(
+            "Budowanie skeleton_key..."
+        )
 
         df["new_skeleton_key"] = df.apply(
             self.key_builder.create,
@@ -60,7 +73,14 @@ class ProductMapper:
 
     def build_titles(self, df):
         matched = df[
-            df["detected_category"] != "OTHER"
+            ~df[
+                "detected_category"
+            ].isin(
+                [
+                    "OTHER",
+                    "EXISTING_PIPELINE"
+                ]
+            )
         ].copy()
 
         grouped = matched.groupby(
@@ -76,65 +96,106 @@ class ProductMapper:
         for skeleton_key, group in grouped:
             first = group.iloc[0]
 
-            product_name = self._choose_product_name(
-                group
+            product_name = (
+                self._choose_product_name(
+                    group
+                )
             )
 
-            product_slug = TextNormalizer.slugify(
-                product_name
+            product_slug = (
+                TextNormalizer.slugify(
+                    product_name
+                )
             )
 
             products.append(
                 {
-                    "id": product_id,
-                    "name": product_name,
-                    "slug": product_slug,
-                    "skeleton_key": skeleton_key,
-                    "image_url": first.get(
-                        "image_url",
-                        ""
-                    ),
-                    "category": first[
-                        "detected_category"
-                    ],
-                    "edition": first.get(
-                        "edition",
-                        ""
-                    ),
-                    "system_id": "",
+                    "id":
+                        product_id,
+
+                    "name":
+                        product_name,
+
+                    "slug":
+                        product_slug,
+
+                    "skeleton_key":
+                        skeleton_key,
+
+                    "image_url":
+                        self._choose_image_url(
+                            group
+                        ),
+
+                    "category":
+                        first[
+                            "detected_category"
+                        ],
+
+                    "edition":
+                        first.get(
+                            "edition",
+                            ""
+                        ),
+
                 }
             )
 
-            for _, offer in group.iterrows():
+            for _, offer in (
+                group.iterrows()
+            ):
                 mapping.append(
                     {
-                        "offer_id": offer["id"],
-                        "title_rest_id": product_id,
-                        "skeleton_key": skeleton_key,
-                        "category": offer[
-                            "detected_category"
-                        ],
-                        "platform": offer[
-                            "detected_platform"
-                        ],
-                        "region": offer[
-                            "detected_region"
-                        ],
-                        "confidence": offer[
-                            "confidence"
-                        ],
-                        "match_rule": offer[
-                            "match_rule"
-                        ],
+                        "offer_id":
+                            offer["id"],
+
+                        "title_rest_id":
+                            product_id,
+
+                        "skeleton_key":
+                            skeleton_key,
+
+                        "category":
+                            offer[
+                                "detected_category"
+                            ],
+
+                        "platform":
+                            offer[
+                                "detected_platform"
+                            ],
+
+                        "region":
+                            offer[
+                                "detected_region"
+                            ],
+
+                        "confidence":
+                            offer[
+                                "confidence"
+                            ],
+
+                        "match_rule":
+                            offer[
+                                "match_rule"
+                            ],
                     }
                 )
 
             product_id += 1
 
-        titles = pd.DataFrame(products)
-        offer_mapping = pd.DataFrame(mapping)
+        titles = pd.DataFrame(
+            products
+        )
 
-        return titles, offer_mapping
+        offer_mapping = pd.DataFrame(
+            mapping
+        )
+
+        return (
+            titles,
+            offer_mapping
+        )
 
     @staticmethod
     def _choose_product_name(group):
@@ -142,12 +203,42 @@ class ProductMapper:
             group["clean_name"]
             .dropna()
             .astype(str)
-            .tolist()
+            .str.strip()
         )
+
+        names = names[
+            names != ""
+        ].tolist()
 
         if not names:
             return ""
 
-        names.sort(key=len)
+        names.sort(
+            key=lambda value: (
+                len(value),
+                value.lower()
+            )
+        )
 
         return names[0]
+
+    @staticmethod
+    def _choose_image_url(group):
+        if "image_url" not in group.columns:
+            return ""
+
+        images = (
+            group["image_url"]
+            .dropna()
+            .astype(str)
+            .str.strip()
+        )
+
+        images = images[
+            images != ""
+        ].tolist()
+
+        if not images:
+            return ""
+
+        return images[0]

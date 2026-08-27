@@ -15,7 +15,9 @@ OUTPUT_REVIEW = "offers_to_review.csv"
 def main():
     start_time = time.time()
 
-    print("Wczytywanie pliku...")
+    print(
+        "Wczytywanie pliku..."
+    )
 
     df = pd.read_csv(
         INPUT_FILE,
@@ -30,15 +32,29 @@ def main():
 
     mapper = ProductMapper()
 
-    df = mapper.process(df)
+    df = mapper.process(
+        df
+    )
 
     review = df[
-        df["detected_category"] == "OTHER"
+        df["detected_category"]
+        == "OTHER"
     ].copy()
 
-    titles, offer_mapping = mapper.build_titles(df)
+    existing_pipeline = df[
+        df["detected_category"]
+        == "EXISTING_PIPELINE"
+    ].copy()
 
-    print("Zapisywanie wyników...")
+    titles, offer_mapping = (
+        mapper.build_titles(
+            df
+        )
+    )
+
+    print(
+        "Zapisywanie wyników..."
+    )
 
     titles.to_csv(
         OUTPUT_TITLES,
@@ -61,10 +77,16 @@ def main():
         encoding="utf-8-sig"
     )
 
-    elapsed = time.time() - start_time
+    elapsed = (
+        time.time()
+        - start_time
+    )
 
     print()
-    print("===== WYNIKI =====")
+
+    print(
+        "===== WYNIKI ====="
+    )
 
     print(
         "Wszystkie oferty:",
@@ -82,19 +104,94 @@ def main():
     )
 
     print(
+        "Obsługiwane przez istniejący pipeline:",
+        len(existing_pipeline)
+    )
+
+    print(
         "Utworzone produkty:",
         len(titles)
     )
 
     print()
-    print("Kategorie:")
 
     print(
-        df["detected_category"]
-        .value_counts()
+        "Kategorie:"
+    )
+
+    print(
+        df[
+            "detected_category"
+        ].value_counts()
     )
 
     print()
+
+    print(
+        "Najczęściej używane reguły:"
+    )
+
+    print(
+        df[
+            "match_rule"
+        ]
+        .value_counts()
+        .head(30)
+    )
+
+    print()
+
+    print(
+        "===== ANALIZA OTHER ====="
+    )
+
+    print()
+
+    print(
+        "Najczęstsze feed_category w OTHER:"
+    )
+
+    if "feed_category" in review.columns:
+        print(
+            review[
+                "feed_category"
+            ]
+            .value_counts()
+            .head(20)
+        )
+
+    print()
+
+    print(
+        "Najczęstsze category w OTHER:"
+    )
+
+    if "category" in review.columns:
+        print(
+            review[
+                "category"
+            ]
+            .value_counts()
+            .head(20)
+        )
+
+    print()
+
+    print(
+        "Najczęstsze DRM w OTHER:"
+    )
+
+    if "drm" in review.columns:
+        print(
+            review[
+                "drm"
+            ]
+            .value_counts()
+            .head(20)
+        )
+
+    print()
+
     print(
         f"Czas wykonania: "
         f"{elapsed:.2f} s"
