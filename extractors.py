@@ -5,6 +5,38 @@ from normalizer import TextNormalizer
 
 class ProductExtractor:
 
+    CURRENCY_ALIASES = {
+        "PLN": "PLN",
+        "EUR": "EUR",
+        "USD": "USD",
+        "GBP": "GBP",
+        "AUD": "AUD",
+        "CAD": "CAD",
+        "BRL": "BRL",
+        "TRY": "TRY",
+        "JPY": "JPY",
+        "SEK": "SEK",
+        "NOK": "NOK",
+        "DKK": "DKK",
+        "CHF": "CHF",
+        "NZD": "NZD",
+        "MXN": "MXN",
+        "AED": "AED",
+        "KWD": "KWD",
+        "INR": "INR",
+        "IDR": "IDR",
+        "HKD": "HKD",
+        "THB": "THB",
+        "SGD": "SGD",
+        "PHP": "PHP",
+        "MYR": "MYR",
+        "SAR": "SAR",
+        "ZAR": "ZAR",
+        "CNY": "CNY",
+        "KRW": "KRW",
+        "TWD": "TWD",
+    }
+
     @staticmethod
     def detect_region(row):
         text = TextNormalizer.normalize(
@@ -66,7 +98,6 @@ class ProductExtractor:
                     "ps5",
                 ]
             ),
-
             (
                 "XBOX",
                 [
@@ -75,7 +106,6 @@ class ProductExtractor:
                     "xbox live",
                 ]
             ),
-
             (
                 "NINTENDO",
                 [
@@ -84,21 +114,18 @@ class ProductExtractor:
                     "eshop",
                 ]
             ),
-
             (
                 "STEAM",
                 [
                     "steam",
                 ]
             ),
-
             (
                 "EPIC",
                 [
                     "epic games",
                 ]
             ),
-
             (
                 "BATTLE_NET",
                 [
@@ -106,7 +133,6 @@ class ProductExtractor:
                     "battle net",
                 ]
             ),
-
             (
                 "PC",
                 [
@@ -132,24 +158,23 @@ class ProductExtractor:
         )
 
         currencies = (
-            "pln|eur|usd|gbp|aud|cad|"
-            "brl|try|jpy|sek|nok|dkk|"
-            "chf|nzd|mxn"
+            "pln|eur|usd|gbp|aud|cad|brl|try|jpy|"
+            "sek|nok|dkk|chf|nzd|mxn|aed|kwd|inr|"
+            "idr|hkd|thb|sgd|php|myr|sar|zar|cny|"
+            "krw|twd"
         )
 
         patterns = [
             rf"\b(\d+(?:[.,]\d+)?)\s*({currencies})\b",
-
             rf"\b({currencies})\s*(\d+(?:[.,]\d+)?)\b",
-
             r"\$(\d+(?:[.,]\d+)?)",
-
             r"€(\d+(?:[.,]\d+)?)",
-
             r"£(\d+(?:[.,]\d+)?)",
+            r"₹\s*(\d+(?:[.,]\d+)?)",
+            r"¥\s*(\d+(?:[.,]\d+)?)",
         ]
 
-        for i, pattern in enumerate(
+        for index, pattern in enumerate(
             patterns
         ):
             match = re.search(
@@ -161,49 +186,60 @@ class ProductExtractor:
             if not match:
                 continue
 
-            if i == 0:
+            if index == 0:
                 return (
-                    match.group(1).replace(
-                        ",",
-                        "."
+                    ProductExtractor._normalize_number(
+                        match.group(1)
                     ),
                     match.group(2).upper()
                 )
 
-            if i == 1:
+            if index == 1:
                 return (
-                    match.group(2).replace(
-                        ",",
-                        "."
+                    ProductExtractor._normalize_number(
+                        match.group(2)
                     ),
                     match.group(1).upper()
                 )
 
-            if i == 2:
+            if index == 2:
                 return (
-                    match.group(1).replace(
-                        ",",
-                        "."
+                    ProductExtractor._normalize_number(
+                        match.group(1)
                     ),
                     "USD"
                 )
 
-            if i == 3:
+            if index == 3:
                 return (
-                    match.group(1).replace(
-                        ",",
-                        "."
+                    ProductExtractor._normalize_number(
+                        match.group(1)
                     ),
                     "EUR"
                 )
 
-            if i == 4:
+            if index == 4:
                 return (
-                    match.group(1).replace(
-                        ",",
-                        "."
+                    ProductExtractor._normalize_number(
+                        match.group(1)
                     ),
                     "GBP"
+                )
+
+            if index == 5:
+                return (
+                    ProductExtractor._normalize_number(
+                        match.group(1)
+                    ),
+                    "INR"
+                )
+
+            if index == 6:
+                return (
+                    ProductExtractor._normalize_number(
+                        match.group(1)
+                    ),
+                    "JPY"
                 )
 
         return "", ""
@@ -275,16 +311,26 @@ class ProductExtractor:
         if not match:
             return ""
 
-        value = match.group(1)
-
-        value = value.replace(
-            " ",
-            ""
+        return ProductExtractor._normalize_number(
+            match.group(1)
         )
 
-        value = value.replace(
-            ",",
-            ""
-        )
+    @staticmethod
+    def _normalize_number(value):
+        value = str(value).strip()
 
-        return value
+        if (
+            "," in value
+            and "." not in value
+            and len(value.split(",")[-1]) <= 2
+        ):
+            return value.replace(
+                ",",
+                "."
+            )
+
+        return (
+            value
+            .replace(" ", "")
+            .replace(",", "")
+        )

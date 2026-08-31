@@ -104,7 +104,7 @@ class ProductMapper:
 
             product_slug = (
                 TextNormalizer.slugify(
-                    product_name
+                    skeleton_key
                 )
             )
 

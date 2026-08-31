@@ -70,7 +70,7 @@ class SkeletonKeyBuilder:
         )
 
     def _gift_card_key(self, row):
-        name = self._canonical_name(
+        original_name = self._canonical_name(
             row.get(
                 "clean_name",
                 ""
@@ -79,7 +79,7 @@ class SkeletonKeyBuilder:
 
         value, currency = (
             ProductExtractor.extract_money_value(
-                name
+                original_name
             )
         )
 
@@ -89,26 +89,33 @@ class SkeletonKeyBuilder:
             )
         )
 
-        name = self._remove_money(
-            name,
+        name_without_money = self._remove_money(
+            original_name,
             value,
             currency
         )
 
-        name = self._canonical_gift_card_brand(
-            name
+        brand = self._detect_gift_card_brand(
+            name_without_money
         )
 
-        elements = [
-            "gift-card",
-            name,
-            value,
-            currency,
-            platform,
-        ]
+        if value and currency:
+            return self._build_key(
+                [
+                    "gift-card",
+                    brand,
+                    value,
+                    currency,
+                    platform,
+                ]
+            )
 
         return self._build_key(
-            elements
+            [
+                "gift-card",
+                name_without_money,
+                platform,
+            ]
         )
 
     def _crypto_voucher_key(self, row):
@@ -125,21 +132,27 @@ class SkeletonKeyBuilder:
             )
         )
 
-        name = self._remove_money(
+        name_without_money = self._remove_money(
             name,
             value,
             currency
         )
 
-        elements = [
-            "crypto-voucher",
-            name,
-            value,
-            currency,
-        ]
+        if value and currency:
+            return self._build_key(
+                [
+                    "crypto-voucher",
+                    name_without_money,
+                    value,
+                    currency,
+                ]
+            )
 
         return self._build_key(
-            elements
+            [
+                "crypto-voucher",
+                name,
+            ]
         )
 
     def _software_key(self, row):
@@ -170,19 +183,17 @@ class SkeletonKeyBuilder:
             name
         )
 
-        elements = [
-            "software",
-            name,
-            duration,
-            (
-                f"{devices}-devices"
-                if devices
-                else ""
-            ),
-        ]
-
         return self._build_key(
-            elements
+            [
+                "software",
+                name,
+                duration,
+                (
+                    f"{devices}-devices"
+                    if devices
+                    else ""
+                ),
+            ]
         )
 
     def _subscription_key(self, row):
@@ -209,15 +220,13 @@ class SkeletonKeyBuilder:
             name
         )
 
-        elements = [
-            "subscription",
-            name,
-            duration,
-            platform,
-        ]
-
         return self._build_key(
-            elements
+            [
+                "subscription",
+                name,
+                duration,
+                platform,
+            ]
         )
 
     def _currency_or_topup_key(
@@ -254,15 +263,15 @@ class SkeletonKeyBuilder:
             )
         )
 
-        elements = [
-            row["detected_category"],
-            name,
-            quantity,
-            platform,
-        ]
-
         return self._build_key(
-            elements
+            [
+                row[
+                    "detected_category"
+                ],
+                name,
+                quantity,
+                platform,
+            ]
         )
 
     def _ingame_item_key(self, row):
@@ -279,14 +288,12 @@ class SkeletonKeyBuilder:
             )
         )
 
-        elements = [
-            "ingame-item",
-            name,
-            platform,
-        ]
-
         return self._build_key(
-            elements
+            [
+                "ingame-item",
+                name,
+                platform,
+            ]
         )
 
     def _account_key(self, row):
@@ -303,14 +310,12 @@ class SkeletonKeyBuilder:
             )
         )
 
-        elements = [
-            "account",
-            name,
-            platform,
-        ]
-
         return self._build_key(
-            elements
+            [
+                "account",
+                name,
+                platform,
+            ]
         )
 
     def _service_key(self, row):
@@ -321,13 +326,11 @@ class SkeletonKeyBuilder:
             )
         )
 
-        elements = [
-            "service",
-            name,
-        ]
-
         return self._build_key(
-            elements
+            [
+                "service",
+                name,
+            ]
         )
 
     @staticmethod
@@ -397,45 +400,40 @@ class SkeletonKeyBuilder:
         return text.strip()
 
     @staticmethod
-    def _canonical_gift_card_brand(
+    def _detect_gift_card_brand(
         name
     ):
-        brand_patterns = [
+        brands = [
             (
                 "playstation",
                 [
                     "playstation",
                 ]
             ),
-
             (
                 "xbox",
                 [
                     "xbox",
                 ]
             ),
-
             (
                 "steam",
                 [
                     "steam",
                 ]
             ),
-
             (
                 "nintendo",
                 [
                     "nintendo",
                 ]
             ),
-
             (
                 "google-play",
                 [
                     "google play",
                 ]
             ),
-
             (
                 "apple",
                 [
@@ -443,51 +441,58 @@ class SkeletonKeyBuilder:
                     "itunes",
                 ]
             ),
-
             (
                 "amazon",
                 [
                     "amazon",
                 ]
             ),
-
             (
                 "instant-gaming",
                 [
                     "instant gaming",
                 ]
             ),
-
             (
                 "roblox",
                 [
                     "roblox",
                 ]
             ),
+            (
+                "rewarble",
+                [
+                    "rewarble",
+                ]
+            ),
+            (
+                "binance",
+                [
+                    "binance",
+                ]
+            ),
         ]
 
-        for canonical, words in (
-            brand_patterns
-        ):
+        for canonical, patterns in brands:
             if any(
-                word in name
-                for word in words
+                pattern in name
+                for pattern in patterns
             ):
                 return canonical
 
-        name = re.sub(
+        result = re.sub(
             r"\bgift card\b",
             " ",
             name
         )
 
-        name = re.sub(
+        result = re.sub(
             r"\s+",
             " ",
-            name
+            result
         )
 
-        return name.strip()
+        return result.strip()
 
     @staticmethod
     def _remove_money(
@@ -498,8 +503,12 @@ class SkeletonKeyBuilder:
         result = name
 
         if value:
+            escaped_value = re.escape(
+                value
+            )
+
             result = re.sub(
-                rf"\b{re.escape(value)}\b",
+                rf"\b{escaped_value}\b",
                 " ",
                 result
             )
@@ -512,7 +521,7 @@ class SkeletonKeyBuilder:
             )
 
         result = re.sub(
-            r"[$€£]",
+            r"[$€£₹¥]",
             " ",
             result
         )

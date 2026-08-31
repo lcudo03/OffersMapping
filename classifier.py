@@ -5,51 +5,37 @@ class ProductClassifier:
 
     FEED_MAPPING = {
         "software": "SOFTWARE",
-
         "ingame_currency": "IN_GAME_CURRENCY",
         "ingame_item": "IN_GAME_ITEM",
         "ingame_topup": "IN_GAME_TOPUP",
         "ingame_account": "ACCOUNT",
         "game_account": "ACCOUNT",
         "ingame_boosting": "IN_GAME_SERVICE",
-
         "csgo_skins": "IN_GAME_ITEM",
-
         "mobile_topup": "TOP_UP",
         "mobile_topup_gc": "TOP_UP",
         "direct top-up": "TOP_UP",
-
         "prepaid": "GIFT_CARD",
         "gift cards": "GIFT_CARD",
         "gift_card": "GIFT_CARD",
-
         "crypto_vouchers": "CRYPTO_VOUCHER",
-
         "subscriptions": "SUBSCRIPTION",
         "subscription": "SUBSCRIPTION",
-
         "steam top up": "TOP_UP",
-
         "game points": "IN_GAME_CURRENCY",
         "league of legends rp": "IN_GAME_CURRENCY",
-
         "hosting": "SOFTWARE",
     }
 
     CATEGORY_MAPPING = {
         "gift card": "GIFT_CARD",
         "gift_card": "GIFT_CARD",
-
         "software": "SOFTWARE",
-
         "subscription": "SUBSCRIPTION",
-
         "account": "ACCOUNT",
         "game_account": "ACCOUNT",
-
         "ingame item": "IN_GAME_ITEM",
         "ingame_item": "IN_GAME_ITEM",
-
         "ingame currency": "IN_GAME_CURRENCY",
         "ingame_currency": "IN_GAME_CURRENCY",
     }
@@ -57,36 +43,25 @@ class ProductClassifier:
     EXISTING_PIPELINE_CATEGORIES = {
         "game",
         "games",
-
         "game_gift",
         "game gift",
-
         "dlc",
-
         "dlc_gift",
         "dlc gift",
-
         "dlc_account",
         "dlc account",
-
         "game_preorder",
         "game preorder",
-
         "game_preorder_gift",
         "game preorder gift",
-
         "game_preorder_account",
         "game preorder account",
-
         "dlc_preorder",
         "dlc preorder",
-
         "dlc_preorder_gift",
         "dlc preorder gift",
-
         "dlc_preorder_account",
         "dlc preorder account",
-
         "preorder",
     }
 
@@ -95,13 +70,8 @@ class ProductClassifier:
         "cryptovoucher": "CRYPTO_VOUCHER",
         "gift me crypto": "CRYPTO_VOUCHER",
         "giftmecrypto": "CRYPTO_VOUCHER",
-
-        "google play": "GIFT_CARD",
-        "nintendo eshop": "GIFT_CARD",
-
         "roblox": "IN_GAME_CURRENCY",
         "riot": "IN_GAME_CURRENCY",
-
         "in app": "IN_GAME_ITEM",
     }
 
@@ -118,34 +88,23 @@ class ProductClassifier:
         "v-bucks",
         "v bucks",
         "vbucks",
-
         "robux",
-
         "fc points",
         "fifa points",
-
         "riot points",
         "valorant points",
-
         "cod points",
         "call of duty points",
-
         "minecoins",
-
         "wow gold",
         "world of warcraft gold",
-
         "osrs gold",
         "runescape gold",
-
         "guild wars gold",
-
         "apex coins",
         "overwatch coins",
-
         "genshin crystals",
         "genesis crystals",
-
         "shark card",
     ]
 
@@ -153,53 +112,38 @@ class ProductClassifier:
         "gift card",
         "giftcard",
         "gift-card",
-
         "wallet card",
         "wallet code",
         "wallet voucher",
-
         "prepaid card",
         "pre-paid card",
-
         "store card",
-
         "gift voucher",
         "digital voucher",
-
         "psn card",
         "playstation store card",
-
         "xbox gift card",
         "steam gift card",
         "steam wallet",
-
         "nintendo eshop card",
         "google play card",
         "apple gift card",
         "itunes gift card",
-
         "amazon gift card",
     ]
 
     SUBSCRIPTION_WORDS = [
         "game pass",
         "gamepass",
-
         "xbox live gold",
-
         "playstation plus",
         "ps plus",
         "ps+",
-
         "nintendo switch online",
-
         "ea play",
-
         "ubisoft+",
         "ubisoft plus",
-
         "wow subscription",
-
         "subscription",
         "premium subscription",
     ]
@@ -207,24 +151,18 @@ class ProductClassifier:
     SOFTWARE_WORDS = [
         "windows 10",
         "windows 11",
-
         "windows server",
-
         "microsoft office",
         "office 2016",
         "office 2019",
         "office 2021",
         "office 2024",
         "office 365",
-
         "microsoft 365",
-
         "antivirus",
         "internet security",
         "total security",
-
         "vpn",
-
         "webroot",
         "kaspersky",
         "norton",
@@ -232,19 +170,14 @@ class ProductClassifier:
         "avast",
         "avg",
         "mcafee",
-
         "adobe",
         "photoshop",
         "illustrator",
         "acrobat",
-
         "autocad",
         "autodesk",
-
         "vmware",
-
         "winrar",
-
         "malwarebytes",
     ]
 
@@ -252,22 +185,15 @@ class ProductClassifier:
         "weapon skin",
         "character skin",
         "player skin",
-
         "skin",
         "skins",
-
         "mount",
         "pet",
-
         "loot box",
-
         "cs2 skin",
         "csgo skin",
-
         "knife skin",
-
         "player trade",
-
         "in-game item",
         "in game item",
     ]
@@ -275,15 +201,10 @@ class ProductClassifier:
     ACCOUNT_WORDS = [
         "game account",
         "gaming account",
-
         "starter account",
-
         "fresh account",
-
         "full access account",
-
         "smurf account",
-
         "leveled account",
     ]
 
@@ -291,26 +212,19 @@ class ProductClassifier:
         "boosting",
         "rank boosting",
         "rank boost",
-
         "power leveling",
         "powerleveling",
-
         "leveling service",
-
         "coaching service",
-
         "carry service",
     ]
 
     TOPUP_WORDS = [
         "mobile top up",
         "mobile top-up",
-
         "phone top up",
         "phone top-up",
-
         "mobile recharge",
-
         "direct top up",
         "direct top-up",
     ]
@@ -463,22 +377,6 @@ class ProductClassifier:
             "no_rule"
         )
 
-    def _classify_existing_pipeline(
-        self,
-        category
-    ):
-        if not category:
-            return None
-
-        if category in self.EXISTING_PIPELINE_CATEGORIES:
-            return (
-                "EXISTING_PIPELINE",
-                1.0,
-                f"existing_pipeline:{category}"
-            )
-
-        return None
-
     def _classify_crypto(
         self,
         name,
@@ -546,6 +444,22 @@ class ProductClassifier:
                 self.DRM_MAPPING[drm],
                 0.90,
                 f"drm:{drm}"
+            )
+
+        return None
+
+    def _classify_existing_pipeline(
+        self,
+        category
+    ):
+        if not category:
+            return None
+
+        if category in self.EXISTING_PIPELINE_CATEGORIES:
+            return (
+                "EXISTING_PIPELINE",
+                1.0,
+                f"existing_pipeline:{category}"
             )
 
         return None
