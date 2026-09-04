@@ -10,6 +10,7 @@ INPUT_FILE = "unmatched_offers.csv"
 OUTPUT_TITLES = "titles_rest.csv"
 OUTPUT_MAPPING = "offer_mapping.csv"
 OUTPUT_REVIEW = "offers_to_review.csv"
+OUTPUT_BRANDS = "brands.csv"
 
 
 def main():
@@ -46,10 +47,12 @@ def main():
         == "EXISTING_PIPELINE"
     ].copy()
 
-    titles, offer_mapping = (
-        mapper.build_titles(
-            df
-        )
+    (
+        titles,
+        offer_mapping,
+        brands
+    ) = mapper.build_titles(
+        df
     )
 
     print(
@@ -77,13 +80,19 @@ def main():
         encoding="utf-8-sig"
     )
 
+    brands.to_csv(
+        OUTPUT_BRANDS,
+        sep=";",
+        index=False,
+        encoding="utf-8-sig"
+    )
+
     elapsed = (
         time.time()
         - start_time
     )
 
     print()
-
     print(
         "===== WYNIKI ====="
     )
@@ -104,7 +113,8 @@ def main():
     )
 
     print(
-        "Obsługiwane przez istniejący pipeline:",
+        "Obsługiwane przez "
+        "istniejący pipeline:",
         len(existing_pipeline)
     )
 
@@ -113,8 +123,12 @@ def main():
         len(titles)
     )
 
-    print()
+    print(
+        "Utworzone brandy:",
+        len(brands)
+    )
 
+    print()
     print(
         "Kategorie:"
     )
@@ -126,72 +140,92 @@ def main():
     )
 
     print()
+    print(
+        "Największe brandy:"
+    )
 
+    if not titles.empty:
+        brand_counts = (
+            titles["brand_id"]
+            .value_counts()
+            .head(30)
+        )
+
+        brand_lookup = (
+            brands.set_index(
+                "id"
+            )["name"]
+            .to_dict()
+        )
+
+        for brand_id, count in (
+            brand_counts.items()
+        ):
+            brand_name = (
+                brand_lookup.get(
+                    brand_id,
+                    "Unknown"
+                )
+            )
+
+            print(
+                f"{brand_name}: "
+                f"{count} produktów"
+            )
+
+    print()
     print(
         "Najczęściej używane reguły:"
     )
 
     print(
-        df[
-            "match_rule"
-        ]
+        df["match_rule"]
         .value_counts()
         .head(30)
     )
 
     print()
-
     print(
         "===== ANALIZA OTHER ====="
     )
 
     print()
-
     print(
-        "Najczęstsze feed_category w OTHER:"
+        "Najczęstsze feed_category "
+        "w OTHER:"
     )
 
-    if "feed_category" in review.columns:
-        print(
-            review[
-                "feed_category"
-            ]
-            .value_counts()
-            .head(20)
-        )
-
-    print()
-
     print(
-        "Najczęstsze category w OTHER:"
+        review["feed_category"]
+        .value_counts()
+        .head(30)
     )
 
-    if "category" in review.columns:
-        print(
-            review[
-                "category"
-            ]
-            .value_counts()
-            .head(20)
-        )
-
     print()
-
     print(
-        "Najczęstsze DRM w OTHER:"
+        "Najczęstsze category "
+        "w OTHER:"
     )
 
-    if "drm" in review.columns:
-        print(
-            review[
-                "drm"
-            ]
-            .value_counts()
-            .head(20)
-        )
+    print(
+        review["category"]
+        .value_counts()
+        .head(30)
+    )
 
     print()
+    print(
+        "Najczęstsze DRM "
+        "w OTHER:"
+    )
 
+    print(
+        review["drm"]
+        .value_counts()
+        .head(30)
+    )
+
+    print()
     print(
         f"Czas wykonania: "
         f"{elapsed:.2f} s"
